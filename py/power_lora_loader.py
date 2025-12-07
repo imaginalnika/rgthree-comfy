@@ -1,4 +1,5 @@
 import folder_paths
+import os
 
 from typing import Union
 
@@ -31,12 +32,13 @@ class RgthreePowerLoraLoader:
       "hidden": {},
     }
 
-  RETURN_TYPES = ("MODEL", "CLIP")
-  RETURN_NAMES = ("MODEL", "CLIP")
+  RETURN_TYPES = ("MODEL", "CLIP", "STRING")
+  RETURN_NAMES = ("MODEL", "CLIP", "LAST_LORA_NAME")
   FUNCTION = "load_loras"
 
   def load_loras(self, model=None, clip=None, **kwargs):
     """Loops over the provided loras in kwargs and applies valid ones."""
+    last_lora_name = ""
     for key, value in kwargs.items():
       key = key.upper()
       if key.startswith('LORA_') and 'on' in value and 'lora' in value and 'strength' in value:
@@ -54,8 +56,9 @@ class RgthreePowerLoraLoader:
           lora = get_lora_by_filename(value['lora'], log_node=self.NAME)
           if model is not None and lora is not None:
             model, clip = LoraLoader().load_lora(model, clip, lora, strength_model, strength_clip)
+            last_lora_name = os.path.splitext(os.path.basename(value['lora']))[0]
 
-    return (model, clip)
+    return (model, clip, last_lora_name)
 
   @classmethod
   def get_enabled_loras_from_prompt_node(cls,
